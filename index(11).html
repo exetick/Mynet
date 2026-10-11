@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>mynet</title>
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%23000'/%3E%3Cg transform='translate(21 21) scale(.65)' fill='none'%3E%3Cpath d='M22 98V58a19 19 0 0 1 38 0v40M60 58a19 19 0 0 1 38 0v40' stroke='%23fff' stroke-width='15' stroke-linecap='round'/%3E%3Ccircle cx='98' cy='20' r='9' fill='%23B9FF4B'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one narrow feed column under a sticky bar; the sign-in screen is a single glass card over a lime glow. */
+:root{
+  --bg:#000000; --panel:rgba(24,24,27,.82); --panel-2:rgba(39,39,42,.6); --line:#34343a;
+  --text:#ffffff; --soft:#d4d4d8; --muted:#a1a1aa; --dim:#71717a;
+  --accent:#B9FF4B; --accent-ink:#0b1400; --like:#fb7185; --save:#facc15; --danger:#f87171;
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- sign-in screen ---------- */
+#auth{position:relative;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:32px 16px;overflow:hidden;background:#000}
+.glow{position:absolute;pointer-events:none}
+.glow.wash{inset:0;background:linear-gradient(to bottom,rgba(185,255,75,.26),rgba(96,150,20,.22) 45%,#000)}
+.glow.top{top:0;left:50%;width:120vh;height:60vh;transform:translateX(-50%);border-radius:0 0 50% 50%;background:rgba(185,255,75,.16);filter:blur(80px);animation:breathe 8s ease-in-out infinite}
+.glow.bottom{bottom:0;left:50%;width:90vh;height:90vh;transform:translateX(-50%);border-radius:50% 50% 0 0;background:rgba(185,255,75,.14);filter:blur(60px);animation:breathe 6s ease-in-out 1s infinite}
+@keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+.card-wrap{position:relative;z-index:1;width:100%;max-width:384px;perspective:1500px;animation:rise .8s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.tilt{position:relative;transition:transform .15s ease-out;transform-style:preserve-3d}
+.beams{position:absolute;inset:-1px;border-radius:16px;overflow:hidden;pointer-events:none}
+.beam{position:absolute;opacity:.6;filter:blur(1.5px)}
+.beam.t,.beam.b{height:3px;width:50%;background:linear-gradient(to right,transparent,#fff,transparent)}
+.beam.r,.beam.l{width:3px;height:50%;background:linear-gradient(to bottom,transparent,#fff,transparent)}
+.beam.t{top:0;animation:bx 3.5s ease-in-out infinite}
+.beam.r{right:0;animation:by 3.5s ease-in-out .6s infinite backwards}
+.beam.b{bottom:0;animation:bx 3.5s ease-in-out 1.2s infinite reverse backwards}
+.beam.l{left:0;animation:by 3.5s ease-in-out 1.8s infinite reverse backwards}
+@keyframes bx{0%{left:-50%}70%,100%{left:100%}}
+@keyframes by{0%{top:-50%}70%,100%{top:100%}}
+.glass{position:relative;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.6)}
+.auth-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:20px}
+.auth-logo{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);margin-bottom:6px}
+.auth-head h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.auth-head p{margin:0;font-size:12px;color:rgba(255,255,255,.6)}
+#auth-form{display:flex;flex-direction:column;gap:12px}
+.field{position:relative;display:flex;align-items:center;transition:transform .2s}
+.field:hover{transform:scale(1.01)}
+.field svg.i{position:absolute;left:12px;width:16px;height:16px;color:rgba(255,255,255,.4);transition:color .3s}
+.field:focus-within svg.i{color:#fff}
+.field input{width:100%;height:40px;border-radius:8px;border:1px solid transparent;background:rgba(255,255,255,.05);padding:0 12px 0 38px;font-size:14px;outline:none;transition:background .3s,border-color .3s}
+.field input::placeholder{color:rgba(255,255,255,.3)}
+.field input:focus{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.field .at{position:absolute;left:13px;font-size:14px;font-weight:700;color:rgba(255,255,255,.4)}
+.field .eye{position:absolute;right:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);border-radius:6px}
+.field .eye:hover{color:#fff}
+.field .eye svg.i{position:static;color:inherit}
+.auth-row{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.6);padding-top:2px}
+.auth-row input{appearance:none;-webkit-appearance:none;width:16px;height:16px;margin:0;border-radius:4px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);display:grid;place-items:center;cursor:pointer}
+.auth-row input:checked{background:#fff;border-color:#fff}
+.auth-row input:checked::after{content:"";width:8px;height:4px;border-left:2px solid #000;border-bottom:2px solid #000;transform:rotate(-45deg) translateY(-1px)}
+.auth-row label{cursor:pointer}
+.btn-main{height:40px;border-radius:8px;background:#fff;color:#000;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;transition:transform .15s,box-shadow .3s}
+.btn-main:hover{transform:scale(1.02);box-shadow:0 0 24px rgba(255,255,255,.18)}
+.btn-main:active{transform:scale(.98)}
+.btn-main:disabled{opacity:.7;cursor:wait}
+.btn-main svg.i{width:14px;height:14px;transition:transform .3s}
+.btn-main:hover svg.i{transform:translateX(3px)}
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.7);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.auth-msg{font-size:12.5px;border-radius:8px;padding:8px 10px;background:rgba(248,113,113,.12);color:#fecaca;border:1px solid rgba(248,113,113,.25)}
+.auth-msg.ok{background:rgba(185,255,75,.1);color:#e3ffb5;border-color:rgba(185,255,75,.25)}
+.auth-switch{text-align:center;font-size:12px;color:rgba(255,255,255,.6);margin:14px 0 0}
+.auth-switch button{color:#fff;font-weight:700;border-bottom:1px solid transparent;transition:border-color .3s}
+.auth-switch button:hover{border-color:#fff}
+.hint{font-size:11.5px;color:rgba(255,255,255,.45);margin:-6px 2px 0}
+
+/* ---------- app ---------- */
+.bar{position:sticky;top:0;z-index:10;background:rgba(0,0,0,.75);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.bar-in{max-width:592px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.8px}
+.nav{display:flex;gap:4px}
+.nav a,.nav button{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .2s,color .2s}
+.nav a:hover,.nav button:hover{background:var(--panel-2);color:#fff}
+.nav a.on{color:var(--accent)}
+.nav svg.i{width:21px;height:21px}
+main{max-width:592px;margin:0 auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:16px}
+.box{border-radius:24px;background:var(--panel);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgba(0,0,0,.4)}
+.tabs{display:flex;gap:6px}
+.tabs button{padding:8px 16px;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--muted);border:1px solid var(--line);min-height:40px}
+.tabs button.on{background:#fff;color:#000;border-color:#fff}
+.ava{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0a0a0a;flex:none;text-transform:uppercase;border:1px solid rgba(255,255,255,.18)}
+
+.composer{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.composer-top{display:flex;gap:12px}
+.composer textarea{flex:1;min-width:0;background:none;border:0;outline:none;resize:none;font-size:16px;min-height:56px;padding:9px 0}
+.composer textarea::placeholder,.inp::placeholder{color:var(--dim)}
+.inp{width:100%;height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);padding:0 12px;outline:none;font-size:14px}
+.inp:focus{border-color:#71717a}
+textarea.inp{height:auto;padding:10px 12px;resize:vertical;min-height:70px}
+.composer-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ghost{height:40px;padding:0 12px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;font-weight:600}
+.ghost:hover{background:var(--panel-2);color:#fff}
+.count{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.pill{height:40px;padding:0 18px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:14px;transition:transform .15s,opacity .2s}
+.pill:hover{transform:scale(1.03)}
+.pill:disabled{opacity:.4;cursor:default;transform:none}
+.pill.line{background:none;color:#fff;border:1px solid #52525b}
+.pill.line:hover{border-color:#fff}
+.pill.sm{height:36px;padding:0 14px;font-size:13px}
+
+.post{overflow:hidden;animation:rise .35s ease both}
+.post-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 0}
+.who{display:flex;align-items:center;gap:12px;min-width:0}
+.who-t{min-width:0}
+.who-n{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who-u{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head-acts{display:flex;gap:2px;flex:none}
+.icon-btn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--dim);transition:color .2s,background .2s}
+.icon-btn:hover{color:var(--save);background:var(--panel-2)}
+.icon-btn.saved{color:var(--save)}
+.icon-btn.saved svg.i{fill:currentColor}
+.icon-btn.del:hover{color:var(--danger)}
+.icon-btn.sure{color:var(--danger);width:auto;padding:0 10px;font-size:12px;font-weight:700}
+.post-text{padding:14px 20px 16px;font-size:16px;color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere}
+.linkbox{margin:0 20px 16px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);padding:14px;display:flex;align-items:flex-start;gap:12px;transition:background .2s}
+.linkbox:hover{background:rgba(63,63,70,.5)}
+.linkbox .lk{padding:8px;border-radius:8px;background:#3f3f46;color:var(--accent);display:flex}
+.linkbox b{display:block;font-size:14px}
+.linkbox span{display:block;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.linkbox div{min-width:0}
+.post-foot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line)}
+.post-foot button{padding:12px 0;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;transition:background .2s,color .2s}
+.post-foot button+button{border-left:1px solid var(--line)}
+.post-foot svg.i{width:16px;height:16px}
+.post-foot .like:hover{background:rgba(136,19,55,.45)}
+.post-foot .like.on{color:var(--like);font-weight:700}
+.post-foot .like.on svg.i{fill:currentColor}
+.post-foot .com:hover{background:rgba(30,58,138,.45)}
+.post-foot .rep:hover{background:rgba(20,83,45,.5)}
+.post-foot .rep.on{color:var(--accent);font-weight:700}
+.comments{border-top:1px solid var(--line);padding:14px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.cm{display:flex;gap:10px}
+.cm-b{min-width:0;font-size:14px;color:var(--soft);overflow-wrap:anywhere}
+.cm-b a{font-weight:700;color:#fff}
+.cm-b small{color:var(--dim);font-size:12px}
+.cm-form{display:flex;gap:8px}
+.cm-form .inp{flex:1;min-width:0}
+
+.profile{padding:22px 20px;display:flex;flex-direction:column;gap:14px}
+.profile-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.profile h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.4px;overflow-wrap:anywhere}
+.profile .uname{color:var(--muted);font-size:14px}
+.profile .bio{color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere}
+.stats{display:flex;gap:6px 20px;flex-wrap:wrap}
+.stats button,.stats span{font-size:14px;color:var(--muted);min-height:32px;display:inline-flex;align-items:center;gap:5px}
+.stats b{color:#fff;font-variant-numeric:tabular-nums}
+.stats button:hover{color:#fff}
+.edit{display:flex;flex-direction:column;gap:10px}
+.edit label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.edit-acts{display:flex;gap:8px;justify-content:flex-end}
+.people{padding:6px 0}
+.person{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px}
+.person+.person{border-top:1px solid rgba(52,52,58,.6)}
+.h{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin:6px 4px 0}
+.empty{padding:36px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:#fff;font-size:16px;margin-bottom:4px}
+.err{color:#fecaca;font-size:13px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#fff;color:#000;font-weight:700;font-size:13.5px;padding:10px 16px;border-radius:999px;z-index:50;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#boot{min-height:100vh;display:flex;align-items:center;justify-content:center}
+@media (max-width:420px){.nav a,.nav button{width:40px}.brand span{display:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="boot" aria-label="Загрузка"></div>
+
+<!-- Sign-in -->
+<section id="auth" hidden>
+  <div class="glow wash"></div><div class="glow top"></div><div class="glow bottom"></div>
+  <div class="card-wrap">
+    <div class="tilt" id="tilt">
+      <div class="beams" aria-hidden="true"><div class="beam t"></div><div class="beam r"></div><div class="beam b"></div><div class="beam l"></div></div>
+      <div class="glass">
+        <div class="auth-head">
+          <div class="auth-logo" id="auth-logo"></div>
+          <h1 id="auth-title">С возвращением</h1>
+          <p id="auth-sub">Войди, чтобы продолжить в mynet</p>
+        </div>
+        <form id="auth-form" novalidate>
+          <div class="field" data-signup hidden><input id="f-name" type="text" placeholder="Имя" maxlength="40" autocomplete="name" aria-label="Имя"></div>
+          <div class="field" data-signup hidden><span class="at">@</span><input id="f-username" type="text" placeholder="юзернейм" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" aria-label="Юзернейм"></div>
+          <p class="hint" data-signup hidden>Латинские буквы, цифры и _ , от 3 до 20 символов</p>
+          <div class="field"><input id="f-email" type="email" placeholder="Почта" autocomplete="email" aria-label="Почта"></div>
+          <div class="field"><input id="f-pass" type="password" placeholder="Пароль" autocomplete="current-password" aria-label="Пароль" style="padding-right:44px"><button type="button" class="eye" id="eye" aria-label="Показать пароль"></button></div>
+          <div class="auth-row"><input id="f-remember" type="checkbox" checked><label for="f-remember">Запомнить меня</label></div>
+          <div class="auth-msg" id="auth-msg" role="alert" hidden></div>
+          <button class="btn-main" id="auth-go" type="submit"></button>
+        </form>
+        <p class="auth-switch"><span id="sw-text">Ещё нет аккаунта?</span> <button type="button" id="sw-btn">Зарегистрироваться</button></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- App -->
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <a class="brand" href="#/" id="brand" aria-label="mynet, лента"></a>
+    <nav class="nav" id="nav" aria-label="Разделы"></nav>
+  </div></header>
+  <main id="view"></main>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://nbjaysdarixncuumjarc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_G0ywq5XbqYa8SRKSLOLgBg_ohjrxqzN';
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c);
+  return el;
+}
+const ICONS = {
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  msg: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
+  bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  eye: '<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="m15 18-.72-3.67M2 8a10.65 10.65 0 0 0 20 0M20 15l-1.73-2.05M4 15l1.73-2.05M9 18l.72-3.67"/>',
+  arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  trash: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+};
+const icon = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+const logo = (size, ink) => `<svg width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M22 98V58a19 19 0 0 1 38 0v40M60 58a19 19 0 0 1 38 0v40" stroke="${ink || '#fff'}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><circle cx="98" cy="20" r="9" fill="#B9FF4B"/></svg>`;
+
+function avatar(p, size) {
+  let x = 0; for (const ch of p.username) x = (x * 31 + ch.charCodeAt(0)) % 360;
+  return h('div', { class: 'ava', style: `width:${size}px;height:${size}px;font-size:${Math.round(size * .42)}px;background:hsl(${x} 75% 68%)`, 'aria-hidden': 'true' }, (p.name || p.username).trim().charAt(0));
+}
+function ago(iso) {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return 'только что';
+  if (s < 3600) return Math.floor(s / 60) + ' мин';
+  if (s < 86400) return Math.floor(s / 3600) + ' ч';
+  if (s < 604800) return Math.floor(s / 86400) + ' дн';
+  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function plural(n, a, b, c) {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c);
+}
+let toastT;
+function toast(text) {
+  const t = $('toast'); t.textContent = text; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
+}
+function ruError(e) {
+  const m = (e && e.message) || String(e);
+  if (/Invalid login credentials/i.test(m)) return 'Неверная почта или пароль.';
+  if (/already registered/i.test(m)) return 'Эта почта уже зарегистрирована. Попробуй войти.';
+  if (/Email not confirmed/i.test(m)) return 'Почта не подтверждена. Открой письмо от mynet и нажми на ссылку.';
+  if (/rate limit|too many/i.test(m)) return 'Слишком много попыток. Подожди немного и попробуй снова.';
+  if (/at least 6/i.test(m)) return 'Пароль должен быть не короче 6 символов.';
+  if (/valid email|invalid format/i.test(m)) return 'Проверь адрес почты.';
+  if (/profiles_username_key|duplicate key/i.test(m)) return 'Этот юзернейм уже занят.';
+  if (/Database error saving new user/i.test(m)) return 'Не получилось создать аккаунт. Возможно, юзернейм уже занят.';
+  if (/Failed to fetch|NetworkError/i.test(m)) return 'Нет связи с сервером. Проверь интернет.';
+  return m;
+}
+
+/* ---------- Supabase ---------- */
+const mem = {};
+const store = {
+  getItem(k) { try { return localStorage.getItem(k) ?? sessionStorage.getItem(k); } catch (e) { return mem[k] ?? null; } },
+  setItem(k, v) {
+    try {
+      const remember = localStorage.getItem('mynet_remember') !== '0';
+      (remember ? localStorage : sessionStorage).setItem(k, v);
+      (remember ? sessionStorage : localStorage).removeItem(k);
+    } catch (e) { mem[k] = v; }
+  },
+  removeItem(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) { delete mem[k]; } }
+};
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: store, persistSession: true, autoRefreshToken: true } });
+
+const state = { me: null, following: new Set(), tab: 'all' };
+const P = 'id,username,name';
+const POST_SEL = `id,text,link_url,created_at,author:profiles!posts_author_id_fkey(${P}),likes(count),comments(count),reposts(count)`;
+
+/* ---------- sign-in screen ---------- */
+let signup = false, busy = false;
+$('auth-logo').innerHTML = logo(26);
+function fieldIcons() {
+  const add = (id, n) => { const f = $(id).parentElement; if (!f.querySelector('svg')) f.insertAdjacentHTML('afterbegin', icon(n)); };
+  add('f-name', 'user'); add('f-email', 'mail'); add('f-pass', 'lock');
+}
+fieldIcons();
+$('eye').innerHTML = icon('eyeoff');
+function authMode() {
+  document.querySelectorAll('[data-signup]').forEach((el) => { el.hidden = !signup; });
+  $('auth-title').textContent = signup ? 'Создай аккаунт' : 'С возвращением';
+  $('auth-sub').textContent = signup ? 'Выбери юзернейм и заходи в mynet' : 'Войди, чтобы продолжить в mynet';
+  $('sw-text').textContent = signup ? 'Уже есть аккаунт?' : 'Ещё нет аккаунта?';
+  $('sw-btn').textContent = signup ? 'Войти' : 'Зарегистрироваться';
+  $('f-pass').autocomplete = signup ? 'new-password' : 'current-password';
+  authBtn(); authMsg('');
+}
+function authBtn() {
+  $('auth-go').disabled = busy;
+  $('auth-go').innerHTML = busy ? '<div class="spin"></div>' : (signup ? 'Зарегистрироваться' : 'Войти') + icon('arrow');
+}
+function authMsg(text, ok) {
+  const m = $('auth-msg'); m.textContent = text; m.hidden = !text; m.className = 'auth-msg' + (ok ? ' ok' : '');
+}
+$('sw-btn').addEventListener('click', () => { signup = !signup; authMode(); });
+$('eye').addEventListener('click', () => {
+  const p = $('f-pass'), show = p.type === 'password';
+  p.type = show ? 'text' : 'password';
+  $('eye').innerHTML = icon(show ? 'eye' : 'eyeoff');
+  $('eye').setAttribute('aria-label', show ? 'Скрыть пароль' : 'Показать пароль');
+});
+$('f-username').addEventListener('input', (e) => { e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''); });
+$('auth-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (busy) return;
+  const email = $('f-email').value.trim(), password = $('f-pass').value;
+  const name = $('f-name').value.trim(), username = $('f-username').value.trim().toLowerCase();
+  if (signup && !name) return authMsg('Напиши своё имя.');
+  if (signup && !/^[a-z0-9_]{3,20}$/.test(username)) return authMsg('Юзернейм: латинские буквы, цифры и _ , от 3 до 20 символов.');
+  if (!email) return authMsg('Напиши почту.');
+  if (password.length < 6) return authMsg('Пароль должен быть не короче 6 символов.');
+  try { localStorage.setItem('mynet_remember', $('f-remember').checked ? '1' : '0'); } catch (e) {}
+  busy = true; authBtn(); authMsg('');
+  try {
+    if (signup) {
+      const free = await sb.rpc('username_free', { u: username });
+      if (free.error) throw free.error;
+      if (!free.data) throw new Error('profiles_username_key');
+      const r = await sb.auth.signUp({ email, password, options: { data: { username, name } } });
+      if (r.error) throw r.error;
+      if (!r.data.session) {
+        signup = false; authMode();
+        authMsg('Аккаунт создан. Мы отправили письмо на ' + email + ': подтверди почту и войди.', true);
+      }
+    } else {
+      const r = await sb.auth.signInWithPassword({ email, password });
+      if (r.error) throw r.error;
+    }
+  } catch (e) { authMsg(ruError(e)); }
+  busy = false; authBtn();
+});
+// 3D tilt, as in the sign-in card reference
+const tilt = $('tilt');
+if (matchMedia('(hover:hover) and (prefers-reduced-motion:no-preference)').matches) {
+  tilt.addEventListener('mousemove', (e) => {
+    const r = tilt.getBoundingClientRect();
+    const x = (e.clientX - r.left - r.width / 2) / 300, y = (e.clientY - r.top - r.height / 2) / 300;
+    tilt.style.transform = `rotateX(${(-y * 10).toFixed(2)}deg) rotateY(${(x * 10).toFixed(2)}deg)`;
+  });
+  tilt.addEventListener('mouseleave', () => { tilt.style.transform = ''; });
+}
+
+/* ---------- session ---------- */
+let currentUid;
+async function onSession(session) {
+  const uid = session ? session.user.id : null;
+  if (uid === currentUid && (uid ? state.me : true)) { $('boot').hidden = true; return; }
+  currentUid = uid;
+  $('boot').hidden = true;
+  if (!uid) {
+    state.me = null; state.following = new Set();
+    $('app').hidden = true; $('auth').hidden = false; authMode();
+    return;
+  }
+  const [me, fol] = await Promise.all([
+    sb.from('profiles').select(P + ',bio').eq('id', uid).maybeSingle(),
+    sb.from('follows').select('following_id').eq('follower_id', uid)
+  ]);
+  if (me.error || !me.data) {
+    await sb.auth.signOut();
+    authMsg(me.error ? ruError(me.error) : 'Профиль не найден. Зарегистрируйся заново.');
+    return;
+  }
+  state.me = me.data;
+  state.following = new Set((fol.data || []).map((r) => r.following_id));
+  $('auth').hidden = true; $('app').hidden = false;
+  $('f-pass').value = '';
+  buildNav(); route();
+}
+sb.auth.onAuthStateChange((ev, session) => { setTimeout(() => onSession(session), 0); });
+
+/* ---------- navigation ---------- */
+function buildNav() {
+  $('brand').innerHTML = logo(30) + '<span>mynet</span>';
+  const nav = $('nav'); nav.textContent = '';
+  const link = (href, ic, label) => h('a', { href, 'aria-label': label, title: label, html: icon(ic), 'data-href': href });
+  nav.append(
+    link('#/', 'home', 'Лента'),
+    link('#/people', 'users', 'Люди'),
+    link('#/saved', 'bookmark', 'Сохранённое'),
+    link('#/u/' + state.me.username, 'user', 'Мой профиль'),
+    h('button', { type: 'button', 'aria-label': 'Выйти', title: 'Выйти', html: icon('out'), onclick: () => sb.auth.signOut() })
+  );
+}
+let routeToken = 0;
+function route() {
+  if (!state.me) return;
+  const hash = location.hash || '#/';
+  document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('on', a.dataset.href === hash));
+  const view = $('view'); view.textContent = '';
+  const token = ++routeToken;
+  const alive = () => token === routeToken;
+  const m = hash.match(/^#\/u\/([a-z0-9_]{3,20})$/);
+  if (m) viewProfile(view, m[1], alive);
+  else if (hash === '#/people') viewPeople(view, alive);
+  else if (hash === '#/saved') viewSaved(view, alive);
+  else viewFeed(view, alive);
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- posts ---------- */
+async function fetchPosts(opts) {
+  let q = sb.from('posts').select(POST_SEL).order('created_at', { ascending: false }).limit(60);
+  if (opts.authors) q = q.in('author_id', opts.authors);
+  if (opts.ids) q = q.in('id', opts.ids);
+  const r = await q;
+  if (r.error) throw r.error;
+  const posts = r.data, ids = posts.map((p) => p.id);
+  let mine = [[], [], []];
+  if (ids.length) {
+    const uid = state.me.id;
+    const rs = await Promise.all(['likes', 'reposts', 'bookmarks'].map((t) => sb.from(t).select('post_id').eq('user_id', uid).in('post_id', ids)));
+    mine = rs.map((x) => (x.data || []).map((y) => y.post_id));
+  }
+  for (const p of posts) {
+    p.nLikes = p.likes[0] ? p.likes[0].count : 0;
+    p.nComments = p.comments[0] ? p.comments[0].count : 0;
+    p.nReposts = p.reposts[0] ? p.reposts[0].count : 0;
+    p.liked = mine[0].includes(p.id); p.reposted = mine[1].includes(p.id); p.saved = mine[2].includes(p.id);
+  }
+  return posts;
+}
+async function toggle(table, p, flag, counter) {
+  const was = p[flag];
+  p[flag] = !was; if (counter) p[counter] += was ? -1 : 1;
+  const r = was
+    ? await sb.from(table).delete().eq('post_id', p.id).eq('user_id', state.me.id)
+    : await sb.from(table).insert({ post_id: p.id });
+  if (r.error) { p[flag] = was; if (counter) p[counter] += was ? 1 : -1; toast(ruError(r.error)); }
+}
+function whoBlock(p, size, extra) {
+  return h('a', { class: 'who', href: '#/u/' + p.username },
+    avatar(p, size),
+    h('div', { class: 'who-t' },
+      h('div', { class: 'who-n' }, p.name),
+      h('div', { class: 'who-u' }, '@' + p.username + (extra ? ' · ' + extra : ''))));
+}
+function postCard(p, onGone) {
+  const card = h('article', { class: 'box post' });
+  const draw = () => {
+    card.textContent = '';
+    const acts = h('div', { class: 'head-acts' });
+    if (p.author.id === state.me.id) {
+      const del = h('button', { class: 'icon-btn del', type: 'button', 'aria-label': 'Удалить пост', title: 'Удалить пост', html: icon('trash') });
+      del.addEventListener('click', async () => {
+        if (!del.classList.contains('sure')) {
+          del.classList.add('sure'); del.textContent = 'Удалить?';
+          setTimeout(() => { if (del.isConnected) { del.classList.remove('sure'); del.innerHTML = icon('trash'); } }, 3000);
+          return;
+        }
+        const r = await sb.from('posts').delete().eq('id', p.id);
+        if (r.error) return toast(ruError(r.error));
+        card.remove(); toast('Пост удалён'); if (onGone) onGone();
+      });
+      acts.append(del);
+    }
+    acts.append(h('button', {
+      class: 'icon-btn' + (p.saved ? ' saved' : ''), type: 'button', html: icon('bookmark'),
+      'aria-label': p.saved ? 'Убрать из сохранённого' : 'Сохранить', 'aria-pressed': String(p.saved), title: p.saved ? 'Убрать из сохранённого' : 'Сохранить',
+      onclick: async () => { const t = toggle('bookmarks', p, 'saved'); draw(); await t; draw(); }
+    }));
+    card.append(h('div', { class: 'post-head' }, whoBlock(p.author, 44, ago(p.created_at)), acts));
+    card.append(h('div', { class: 'post-text' }, p.text));
+    if (p.link_url) {
+      let host = p.link_url; try { host = new URL(p.link_url).hostname.replace(/^www\./, ''); } catch (e) {}
+      card.append(h('a', { class: 'linkbox', href: p.link_url, target: '_blank', rel: 'noopener noreferrer nofollow' },
+        h('span', { class: 'lk', html: icon('link') }),
+        h('div', null, h('b', null, host), h('span', null, p.link_url))));
+    }
+    const btn = (cls, ic, n, label, fn, on) => h('button', { class: cls + (on ? ' on' : ''), type: 'button', 'aria-label': label + ': ' + n, title: label, 'aria-pressed': on == null ? null : String(on), html: icon(ic) + '<span>' + n + '</span>', onclick: fn });
+    card.append(h('div', { class: 'post-foot' },
+      btn('like', 'heart', p.nLikes, 'Нравится', async () => { const t = toggle('likes', p, 'liked', 'nLikes'); draw(); await t; draw(); }, p.liked),
+      btn('com', 'msg', p.nComments, 'Комментарии', () => { p.open = !p.open; draw(); }),
+      btn('rep', 'share', p.nReposts, 'Поделиться', async () => {
+        const t = toggle('reposts', p, 'reposted', 'nReposts'); draw();
+        if (p.reposted) {
+          const url = location.origin + location.pathname + '#/u/' + p.author.username;
+          try { await navigator.clipboard.writeText(url); toast('Ссылка на автора скопирована'); } catch (e) { toast('Ты поделился постом'); }
+        }
+        await t; draw();
+      }, p.reposted)));
+    if (p.open) card.append(commentsBlock(p, draw));
+  };
+  draw();
+  return card;
+}
+function commentsBlock(p, redraw) {
+  const box = h('div', { class: 'comments' });
+  const list = h('div', { style: 'display:flex;flex-direction:column;gap:12px' }, h('div', { class: 'count' }, 'Загружаю…'));
+  const input = h('input', { class: 'inp', type: 'text', maxlength: '300', placeholder: 'Написать комментарий', 'aria-label': 'Комментарий', id: 'cm-' + p.id });
+  const form = h('form', { class: 'cm-form' }, input, h('button', { class: 'pill sm', type: 'submit' }, 'Отправить'));
+  const load = async () => {
+    const r = await sb.from('comments').select(`id,text,created_at,author:profiles!comments_author_id_fkey(${P})`).eq('post_id', p.id).order('created_at').limit(100);
+    list.textContent = '';
+    if (r.error) return list.append(h('div', { class: 'err' }, ruError(r.error)));
+    if (!r.data.length) list.append(h('div', { class: 'count' }, 'Пока нет комментариев. Напиши первый.'));
+    for (const c of r.data) {
+      list.append(h('div', { class: 'cm' }, avatar(c.author, 30),
+        h('div', { class: 'cm-b' },
+          h('a', { href: '#/u/' + c.author.username }, c.author.name), ' ',
+          h('small', null, '@' + c.author.username + ' · ' + ago(c.created_at)),
+          h('div', null, c.text))));
+    }
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim(); if (!text) return;
+    input.disabled = true;
+    const r = await sb.from('comments').insert({ post_id: p.id, text });
+    input.disabled = false;
+    if (r.error) return toast(ruError(r.error));
+    p.nComments += 1; redraw();
+  });
+  box.append(list, form); load();
+  return box;
+}
+async function listPosts(holder, opts, alive, emptyTitle, emptyText) {
+  holder.textContent = '';
+  holder.append(h('div', { class: 'empty' }, 'Загружаю…'));
+  try {
+    const posts = await fetchPosts(opts);
+    if (!alive()) return;
+    holder.textContent = '';
+    if (!posts.length) holder.append(h('div', { class: 'box empty' }, h('b', null, emptyTitle), emptyText));
+    for (const p of posts) holder.append(postCard(p));
+  } catch (e) {
+    if (!alive()) return;
+    holder.textContent = ''; holder.append(h('div', { class: 'box empty err' }, ruError(e)));
+  }
+}
+const stack = () => h('div', { style: 'display:flex;flex-direction:column;gap:16px' });
+
+/* ---------- feed ---------- */
+function viewFeed(view, alive) {
+  const holder = stack();
+  const reload = () => {
+    if (state.tab === 'following') {
+      listPosts(holder, { authors: [...state.following, state.me.id] }, alive, 'Здесь пока пусто', 'Подпишись на людей во вкладке «Люди», и их посты появятся здесь.');
+    } else {
+      listPosts(holder, {}, alive, 'Постов ещё нет', 'Напиши первый пост в mynet.');
+    }
+  };
+  // composer
+  const ta = h('textarea', { id: 'new-post', maxlength: '500', placeholder: 'Что нового, ' + state.me.name + '?', 'aria-label': 'Текст поста', rows: '2' });
+  const link = h('input', { class: 'inp', id: 'new-link', type: 'url', maxlength: '300', placeholder: 'https://…', 'aria-label': 'Ссылка', hidden: true });
+  const count = h('span', { class: 'count' }, '0 / 500');
+  const send = h('button', { class: 'pill', type: 'submit', disabled: true }, 'Опубликовать');
+  ta.addEventListener('input', () => {
+    count.textContent = ta.value.length + ' / 500'; send.disabled = !ta.value.trim();
+    ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 260) + 'px';
+  });
+  const form = h('form', { class: 'box composer' },
+    h('div', { class: 'composer-top' }, avatar(state.me, 44), ta), link,
+    h('div', { class: 'composer-foot' },
+      h('button', { class: 'ghost', type: 'button', html: icon('link') + '<span>Ссылка</span>', onclick: () => { link.hidden = !link.hidden; if (!link.hidden) link.focus(); else link.value = ''; } }),
+      h('div', { style: 'display:flex;align-items:center;gap:12px' }, count, send)));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = ta.value.trim(); if (!text) return;
+    let url = link.hidden ? '' : link.value.trim();
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    if (url) { try { new URL(url); } catch (err) { return toast('Ссылка выглядит неправильно'); } }
+    send.disabled = true;
+    const r = await sb.from('posts').insert({ text, link_url: url || null });
+    if (r.error) { send.disabled = false; return toast(ruError(r.error)); }
+    ta.value = ''; link.value = ''; link.hidden = true; ta.style.height = 'auto'; count.textContent = '0 / 500';
+    toast('Опубликовано'); reload();
+  });
+  const tabs = h('div', { class: 'tabs', role: 'tablist' });
+  const tab = (id, label) => h('button', { type: 'button', role: 'tab', 'aria-selected': String(state.tab === id), class: state.tab === id ? 'on' : '', onclick: () => { state.tab = id; drawTabs(); reload(); } }, label);
+  const drawTabs = () => { tabs.textContent = ''; tabs.append(tab('all', 'Все'), tab('following', 'Подписки')); };
+  drawTabs();
+  view.append(form, tabs, holder);
+  reload();
+}
+
+/* ---------- saved ---------- */
+async function viewSaved(view, alive) {
+  const holder = stack();
+  view.append(h('div', { class: 'h' }, 'Сохранённое'), holder);
+  const r = await sb.from('bookmarks').select('post_id').eq('user_id', state.me.id).order('created_at', { ascending: false }).limit(60);
+  if (!alive()) return;
+  if (r.error) return holder.append(h('div', { class: 'box empty err' }, ruError(r.error)));
+  if (!r.data.length) return holder.append(h('div', { class: 'box empty' }, h('b', null, 'Ничего не сохранено'), 'Нажми на закладку в углу поста, и он появится здесь. Сохранённое видишь только ты.'));
+  listPosts(holder, { ids: r.data.map((x) => x.post_id) }, alive, 'Ничего не сохранено', '');
+}
+
+/* ---------- follow ---------- */
+function followBtn(user, onChange) {
+  if (user.id === state.me.id) return null;
+  const b = h('button', { type: 'button' });
+  const draw = () => {
+    const on = state.following.has(user.id);
+    b.className = 'pill sm' + (on ? ' line' : '');
+    b.textContent = on ? 'Вы подписаны' : 'Подписаться';
+    b.setAttribute('aria-pressed', String(on));
+  };
+  b.addEventListener('click', async () => {
+    const on = state.following.has(user.id);
+    b.disabled = true;
+    const r = on
+      ? await sb.from('follows').delete().eq('follower_id', state.me.id).eq('following_id', user.id)
+      : await sb.from('follows').insert({ following_id: user.id });
+    b.disabled = false;
+    if (r.error) return toast(ruError(r.error));
+    if (on) state.following.delete(user.id); else state.following.add(user.id);
+    draw(); if (onChange) onChange(on ? -1 : 1);
+  });
+  draw();
+  return b;
+}
+function personRow(u) {
+  return h('div', { class: 'person' }, whoBlock(u, 44), followBtn(u));
+}
+
+/* ---------- people ---------- */
+function viewPeople(view, alive) {
+  const input = h('input', { class: 'inp', id: 'people-q', type: 'search', placeholder: 'Найти по имени или @юзернейму', 'aria-label': 'Поиск людей', style: 'height:44px;border-radius:14px' });
+  const list = h('div', { class: 'box people' });
+  let t, n = 0;
+  const run = async () => {
+    const my = ++n;
+    const term = input.value.trim().replace(/^@/, '').replace(/[,()%*\\]/g, '');
+    let q = sb.from('profiles').select(P).limit(40);
+    q = term ? q.or(`username.ilike.%${term}%,name.ilike.%${term}%`).order('username') : q.order('created_at', { ascending: false });
+    const r = await q;
+    if (!alive() || my !== n) return;
+    list.textContent = '';
+    if (r.error) return list.append(h('div', { class: 'empty err' }, ruError(r.error)));
+    const rows = r.data.filter((u) => u.id !== state.me.id);
+    if (!rows.length) return list.append(h('div', { class: 'empty' }, h('b', null, term ? 'Никого не нашлось' : 'Ты здесь первый'), term ? 'Проверь, как написан юзернейм.' : 'Позови друзей: дай им ссылку на сайт, и они появятся в этом списке.'));
+    for (const u of rows) list.append(personRow(u));
+  };
+  input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 250); });
+  view.append(input, h('div', { class: 'h' }, 'Люди в mynet'), list);
+  run();
+}
+
+/* ---------- profile ---------- */
+async function viewProfile(view, username, alive) {
+  const r = await sb.from('profiles').select(P + ',bio,created_at').eq('username', username).maybeSingle();
+  if (!alive()) return;
+  if (r.error || !r.data) return view.append(h('div', { class: 'box empty' }, h('b', null, 'Профиль не найден'), 'Аккаунта @' + username + ' нет в mynet.'));
+  const u = r.data, mine = u.id === state.me.id;
+  const cnt = (q) => q.then((x) => x.count || 0);
+  const [followers, following, posts] = await Promise.all([
+    cnt(sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', u.id)),
+    cnt(sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', u.id)),
+    cnt(sb.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', u.id))
+  ]);
+  if (!alive()) return;
+  const nums = { followers, following };
+  const card = h('section', { class: 'box profile' });
+  const under = stack();
+  const showPosts = () => listPosts(under, { authors: [u.id] }, alive, mine ? 'У тебя пока нет постов' : 'Постов пока нет', mine ? 'Напиши что-нибудь в ленте.' : '');
+  const showList = async (kind) => {
+    under.textContent = '';
+    const col = kind === 'followers' ? 'follower' : 'following';
+    const other = kind === 'followers' ? 'following_id' : 'follower_id';
+    const q = await sb.from('follows').select(`u:profiles!follows_${col}_id_fkey(${P})`).eq(other, u.id).order('created_at', { ascending: false }).limit(200);
+    if (!alive()) return;
+    const list = h('div', { class: 'box people' });
+    under.append(
+      h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:12px' },
+        h('div', { class: 'h' }, kind === 'followers' ? 'Подписчики' : 'Подписки'),
+        h('button', { class: 'ghost', type: 'button', onclick: showPosts }, 'К постам')), list);
+    if (q.error) return list.append(h('div', { class: 'empty err' }, ruError(q.error)));
+    if (!q.data.length) return list.append(h('div', { class: 'empty' }, kind === 'followers' ? 'Пока никто не подписался.' : 'Пока нет подписок.'));
+    for (const row of q.data) list.append(personRow(row.u));
+  };
+  const draw = () => {
+    card.textContent = '';
+    const action = mine
+      ? h('button', { class: 'pill sm line', type: 'button', onclick: edit }, 'Редактировать')
+      : followBtn(u, (d) => { nums.followers += d; draw(); });
+    card.append(...[
+      h('div', { class: 'profile-top' }, avatar(u, 76), action),
+      h('div', null, h('h2', null, u.name), h('div', { class: 'uname' }, '@' + u.username)),
+      u.bio ? h('div', { class: 'bio' }, u.bio) : null,
+      h('div', { class: 'stats' },
+        h('button', { type: 'button', onclick: () => showList('followers') }, h('b', null, String(nums.followers)), plural(nums.followers, 'подписчик', 'подписчика', 'подписчиков')),
+        h('button', { type: 'button', onclick: () => showList('following') }, h('b', null, String(nums.following)), plural(nums.following, 'подписка', 'подписки', 'подписок')),
+        h('span', null, h('b', null, String(posts)), plural(posts, 'пост', 'поста', 'постов')))].filter(Boolean));
+  };
+  const edit = () => {
+    card.textContent = '';
+    const name = h('input', { class: 'inp', id: 'e-name', maxlength: '40', value: u.name });
+    const uname = h('input', { class: 'inp', id: 'e-username', maxlength: '20', value: u.username, autocapitalize: 'none', spellcheck: 'false' });
+    const bio = h('textarea', { class: 'inp', id: 'e-bio', maxlength: '160' }); bio.value = u.bio || '';
+    const msg = h('div', { class: 'err', role: 'alert' });
+    uname.addEventListener('input', () => { uname.value = uname.value.toLowerCase().replace(/[^a-z0-9_]/g, ''); });
+    const form = h('form', { class: 'edit' },
+      h('label', null, 'Имя', name),
+      h('label', null, 'Юзернейм (латинские буквы, цифры и _ , от 3 до 20)', uname),
+      h('label', null, 'О себе', bio), msg,
+      h('div', { class: 'edit-acts' },
+        h('button', { class: 'pill sm line', type: 'button', onclick: draw }, 'Отмена'),
+        h('button', { class: 'pill sm', type: 'submit' }, 'Сохранить')));
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const next = { name: name.value.trim(), username: uname.value.trim(), bio: bio.value.trim() };
+      if (!next.name) { msg.textContent = 'Напиши имя.'; return; }
+      if (!/^[a-z0-9_]{3,20}$/.test(next.username)) { msg.textContent = 'Юзернейм: латинские буквы, цифры и _ , от 3 до 20 символов.'; return; }
+      const q = await sb.from('profiles').update(next).eq('id', u.id);
+      if (q.error) { msg.textContent = ruError(q.error); return; }
+      Object.assign(state.me, next); toast('Профиль сохранён');
+      buildNav();
+      if (next.username !== username) location.hash = '#/u/' + next.username; else route();
+    });
+    card.append(form);
+  };
+  draw();
+  view.append(card, under);
+  showPosts();
+}
+</script>
+</body>
+</html>
